@@ -364,6 +364,10 @@ Works ok.
 
 Works ok.
 
+## Create type
+
+Works ok. Can be seen on [apgdiff test](https://github.com/fordfrog/apgdiff/blob/develop/src/test/resources/cz/startnet/utils/pgdiff/add_type_diff.sql)
+
 ## Slash commands
 
 Every slash command must be ended with a ```;``` to be successfully ignored, otherwise it'll err
