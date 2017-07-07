@@ -237,6 +237,73 @@ Exception in thread "main" java.lang.RuntimeException: Cannot find sequence 'dat
 q to webuser;'. Missing CREATE SEQUENCE?
 ```
 
+## Grant execute
+
+It errs, though when doing ```GRANT ALL ON FUNCTION``` it get's ignored.
+
+Fail:
+```sql
+-- v1.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create or replace function data.private_items() returns setof int as $$
+  select id from data.items where private = true
+$$ stable security definer language sql;
+-- v2.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create or replace function data.private_items() returns setof int as $$
+  select id from data.items where private = true
+$$ stable security definer language sql;
+
+create role webuser;
+grant execute on function data.private_items() to webuser;
+-- diff.sql
+Exception in thread "main" cz.startnet.utils.pgdiff.parsers.ParserException: Cannot parse string: grant execute on function data.private_items() to webuser;
+Expected TO at position 15 'on function data.pri'
+```
+
+Ignored:
+```sql
+-- v1.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create or replace function data.private_items() returns setof int as $$
+  select id from data.items where private = true
+$$ stable security definer language sql;
+-- v2.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create or replace function data.private_items() returns setof int as $$
+  select id from data.items where private = true
+$$ stable security definer language sql;
+
+create role webuser;
+GRANT ALL ON FUNCTION data.private_items() TO webuser;
+-- diff.sql
+-- Changes ignored
+```
+
 ## Copy statement
 
 Doesn't work.
