@@ -1,7 +1,14 @@
 
-# Pgdiff testing
+# Apgdiff testing
 
-Some apgdiff tests
+Some apgdiff tests, overall it can handle well when the diff is between dumps(those have a more regular syntax), with the exception of:
+
+Gives error:
+- rls
+
+Gets ignored:
+- grant execute on function
+- create role
 
 ## Constraints
 
@@ -241,6 +248,37 @@ q to webuser;'. Missing CREATE SEQUENCE?
 
 It errs, though when doing ```GRANT ALL ON FUNCTION``` it get's ignored.
 
+Ignored:
+```sql
+-- v1.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create or replace function data.private_items() returns setof int as $$
+  select id from data.items where private = true
+$$ stable security definer language sql;
+-- v2.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create or replace function data.private_items() returns setof int as $$
+  select id from data.items where private = true
+$$ stable security definer language sql;
+
+create role webuser;
+GRANT ALL ON FUNCTION data.private_items() TO webuser;
+-- diff.sql
+-- Changes ignored
+```
+
 Fail:
 ```sql
 -- v1.sql
@@ -271,37 +309,6 @@ grant execute on function data.private_items() to webuser;
 -- diff.sql
 Exception in thread "main" cz.startnet.utils.pgdiff.parsers.ParserException: Cannot parse string: grant execute on function data.private_items() to webuser;
 Expected TO at position 15 'on function data.pri'
-```
-
-Ignored:
-```sql
--- v1.sql
-create schema data;
-create table data.items (
-	id    serial primary key,
-	name  text not null,
-	private boolean default true
-);
-
-create or replace function data.private_items() returns setof int as $$
-  select id from data.items where private = true
-$$ stable security definer language sql;
--- v2.sql
-create schema data;
-create table data.items (
-	id    serial primary key,
-	name  text not null,
-	private boolean default true
-);
-
-create or replace function data.private_items() returns setof int as $$
-  select id from data.items where private = true
-$$ stable security definer language sql;
-
-create role webuser;
-GRANT ALL ON FUNCTION data.private_items() TO webuser;
--- diff.sql
--- Changes ignored
 ```
 
 ## Grant table
@@ -349,6 +356,31 @@ create role anonymous;
 -- Changes ignored
 ```
 
+## Triggers
+
+Works ok.
+
+## Functions
+
+Works ok.
+
+## Slash commands
+
+Every slash command must be ended with a ```;``` to be successfully ignored, otherwise it'll err
+
+Fail
+```sql
+-- v1.sql
+\echo # Loading roles
+\set authenticator `echo $DB_USER`
+-- v2.sql
+\echo # Loading roles;
+\set authenticator `echo $DB_USER`
+\set authenticator_pass `echo $DB_PASS`
+-- diff.sql
+Exception in thread "main" java.lang.RuntimeException: Cannot find ending semicolon of statement: \echo # Loading roles
+```
+
 ## Copy statement
 
 Doesn't work.
@@ -386,29 +418,4 @@ Exception in thread "main" java.lang.RuntimeException: Cannot find ending semico
 5       item_5  TRUE    2
 6       item_6  FALSE   2
 \.
-```
-
-## Triggers
-
-Works ok.
-
-## Functions
-
-Works ok.
-
-## Slash commands
-
-Every slash command must be ended with a ```;``` to be successfully ignored, otherwise it'll err
-
-Fail
-```sql
--- v1.sql
-\echo # Loading roles
-\set authenticator `echo $DB_USER`
--- v2.sql
-\echo # Loading roles;
-\set authenticator `echo $DB_USER`
-\set authenticator_pass `echo $DB_PASS`
--- diff.sql
-Exception in thread "main" java.lang.RuntimeException: Cannot find ending semicolon of statement: \echo # Loading roles
 ```
