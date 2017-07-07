@@ -304,6 +304,21 @@ GRANT ALL ON FUNCTION data.private_items() TO webuser;
 -- Changes ignored
 ```
 
+## Creating droping roles
+
+They get ignored, it doesn't migrate that
+```sql
+-- v1.sql
+create role webuser;
+create role admin;
+-- v2.sql
+create role webuser;
+create role anonymous;
+drop role admin;
+-- diff.sql
+-- Changes ignored
+```
+
 ## Copy statement
 
 Doesn't work.
