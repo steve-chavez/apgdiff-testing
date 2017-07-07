@@ -276,6 +276,10 @@ Exception in thread "main" java.lang.RuntimeException: Cannot find ending semico
 \.
 ```
 
+## Triggers
+
+Works ok.
+
 ## Functions
 
 Works ok.
