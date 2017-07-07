@@ -176,7 +176,66 @@ Exception in thread "main" cz.startnet.utils.pgdiff.parsers.ParserException: Can
 Expected , at position 32 'row level security'
 ```
 
-## Grant seqjjkk
+## Grant sequence
+
+It works with explicit ```CREATE SEQUENCE```.
+
+Success:
+```sql
+-- v1.sql
+create schema data;
+create table data.sub_items (
+  id           integer not null
+);
+
+CREATE SEQUENCE data.sub_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE data.sub_items_id_seq OWNED BY data.sub_items.id;
+-- v2.sql
+create schema data;
+create table data.sub_items (
+  id           integer not null
+);
+
+CREATE SEQUENCE data.sub_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE data.sub_items_id_seq OWNED BY data.sub_items.id;
+
+create role webuser;
+grant usage on sequence data.sub_items_id_seq to webuser;
+-- diff.sql
+REVOKE ALL ON SEQUENCE sub_items_id_seq FROM webuser;
+GRANT USAGE ON SEQUENCE sub_items_id_seq TO webuser;
+```
+
+Fail:
+```sql
+-- v1.sql
+create schema data;
+create table data.sub_items (
+  id           serial primary key,
+);
+-- v2.sql
+create schema data;
+create table data.sub_items (
+  id           serial primary key,
+);
+create role webuser;
+grant usage on sequence data.sub_items_id_seq to webuser;
+-- diff.sql
+Exception in thread "main" java.lang.RuntimeException: Cannot find sequence 'data.sub_items_id_seq' for statement 'grant usage on sequence data.sub_items_id_se
+q to webuser;'. Missing CREATE SEQUENCE?
+```
 
 ## Copy statement
 
