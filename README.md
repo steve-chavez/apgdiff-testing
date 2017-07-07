@@ -304,6 +304,37 @@ GRANT ALL ON FUNCTION data.private_items() TO webuser;
 -- Changes ignored
 ```
 
+## Grant table
+
+Works ok.
+
+Sucess:
+```sql
+-- v1.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create role webuser;
+grant select, insert, update, delete on data.items to webuser;
+-- v2.sql
+create schema data;
+create table data.items (
+	id    serial primary key,
+	name  text not null,
+	private boolean default true
+);
+
+create role webuser;
+grant select on data.items to webuser;
+-- diff.sql
+REVOKE ALL ON TABLE items FROM webuser;
+GRANT SELECT ON TABLE items TO webuser;
+```
+
 ## Roles
 
 They get ignored, it doesn't migrate that

@@ -5,4 +5,5 @@ create table data.items (
 	private boolean default true
 );
 
-grant select, insert, update, delete on api.subitems to webuser;
+create role webuser;
+grant select on data.items to webuser;
